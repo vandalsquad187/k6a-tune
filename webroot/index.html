@@ -5,68 +5,36 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
 <title>k6a-tune</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+* { margin:0; padding:0; box-sizing:border-box; }
 :root {
-  --bg: #0d0d0f;
-  --bg2: #151518;
-  --card: rgba(20,20,25,0.85);
-  --border: rgba(255,255,255,0.06);
-  --text: #e8e8ed;
-  --muted: #6b6b7a;
-  --accent: #7c5cfc;
-  --accent2: #a78bfa;
-  --green: #34d399;
-  --yellow: #fbbf24;
-  --red: #f87171;
-  --orange: #fb923c;
-  --nav-bg: rgba(15,15,20,0.92);
-  --glass: backdrop-filter blur(20px);
+  --bg: #0d0d0f; --bg2: #151518; --card: rgba(20,20,25,0.88);
+  --border: rgba(255,255,255,0.06); --text: #e8e8ed; --muted: #6b6b7a;
+  --accent: #7c5cfc; --accent2: #a78bfa; --green: #34d399; --yellow: #fbbf24;
+  --red: #f87171; --nav-bg: rgba(15,15,20,0.92);
 }
 [data-theme="light"] {
-  --bg: #f5f5f7;
-  --bg2: #ffffff;
-  --card: rgba(255,255,255,0.85);
-  --border: rgba(0,0,0,0.08);
-  --text: #1a1a2e;
-  --muted: #8e8ea0;
-  --accent: #6d4aff;
-  --accent2: #8b5cf6;
-  --green: #059669;
-  --yellow: #d97706;
-  --red: #dc2626;
-  --orange: #ea580c;
-  --nav-bg: rgba(245,245,247,0.92);
+  --bg: #f5f5f7; --bg2: #fff; --card: rgba(255,255,255,0.88);
+  --border: rgba(0,0,0,0.08); --text: #1a1a2e; --muted: #8e8ea0;
+  --accent: #6d4aff; --accent2: #8b5cf6; --green: #059669; --yellow: #d97706;
+  --red: #dc2626; --nav-bg: rgba(245,245,247,0.92);
 }
 [data-theme="amoled"] {
-  --bg: #000000;
-  --bg2: #050505;
-  --card: rgba(5,5,10,0.95);
-  --border: rgba(255,255,255,0.04);
-  --text: #d0d0d8;
-  --muted: #505058;
-  --accent: #7c5cfc;
-  --accent2: #a78bfa;
-  --green: #2dd4a0;
-  --yellow: #f5b81a;
-  --red: #ef4444;
-  --orange: #f97316;
+  --bg: #000; --bg2: #050505; --card: rgba(5,5,10,0.95);
+  --border: rgba(255,255,255,0.04); --text: #d0d0d8; --muted: #505058;
   --nav-bg: rgba(0,0,0,0.95);
 }
-html, body { height:100%; overflow:hidden; }
+html,body { height:100%; overflow:hidden; }
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, system-ui, sans-serif;
-  font-size: 14px;
+  background:var(--bg); color:var(--text);
+  font-family:-apple-system,system-ui,sans-serif; font-size:14px;
   display:flex; flex-direction:column;
 }
-.pages { flex:1; overflow:hidden; position:relative; }
+.pages { flex:1; position:relative; }
 .page {
-  position:absolute; inset:0; overflow-y:auto;
-  padding:16px 16px 80px; display:none; transition:opacity .2s;
+  position:absolute; inset:0; overflow-y:auto; display:none;
+  padding:16px 16px 80px;
 }
-.page.active { display:block; opacity:1; }
-.page.hidden { display:none; }
+.page.active { display:block; }
 .page::-webkit-scrollbar { display:none; }
 
 /* Nav */
@@ -81,7 +49,8 @@ body {
 .nav-btn {
   background:none; border:none; color:var(--muted);
   padding:10px 18px; border-radius:16px; font-size:11px; font-weight:600;
-  letter-spacing:.5px; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:6px;
+  letter-spacing:.5px; cursor:pointer; display:flex; align-items:center; gap:6px;
+  transition:all .2s;
 }
 .nav-btn.active { background:var(--accent); color:#fff; box-shadow:0 0 16px rgba(124,92,252,.3); }
 .nav-btn:active { transform:scale(.95); }
@@ -97,12 +66,12 @@ body {
   font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
   color:var(--accent2); margin-bottom:12px; display:flex; align-items:center; gap:6px;
 }
-.card-title::after { content:''; flex:1; height:1px; background:linear-gradient(to right, var(--accent2), transparent); }
+.card-title::after { content:''; flex:1; height:1px; background:linear-gradient(to right,var(--accent2),transparent); }
 
 /* Hero */
 .hero {
   padding:20px 16px; text-align:center;
-  background:linear-gradient(135deg, rgba(124,92,252,.15), rgba(167,139,250,.05));
+  background:linear-gradient(135deg,rgba(124,92,252,.15),rgba(167,139,250,.05));
   border-radius:16px; margin-bottom:12px; border:1px solid var(--border);
 }
 .hero-tag { font-size:8px; color:var(--accent2); letter-spacing:4px; font-family:monospace; margin-bottom:4px; }
@@ -115,11 +84,19 @@ body {
 .hero-badge.daily { background:rgba(251,191,36,.15); color:var(--yellow); border:1px solid rgba(251,191,36,.3); }
 .hero-badge.gaming { background:rgba(248,113,113,.15); color:var(--red); border:1px solid rgba(248,113,113,.3); }
 
-/* Profile Selector */
+/* Offline Banner */
+.offline {
+  display:none; padding:8px 12px; background:rgba(248,113,113,.1);
+  border:1px solid rgba(248,113,113,.3); border-radius:10px;
+  text-align:center; font-size:10px; color:var(--red); margin-bottom:12px;
+}
+.offline.show { display:block; }
+
+/* Profile */
 .profiles { display:flex; gap:10px; }
 .pc {
   flex:1; padding:16px 12px; border-radius:14px; border:2px solid var(--border);
-  text-align:center; cursor:pointer; transition:all .2s; position:relative;
+  text-align:center; cursor:pointer; transition:all .2s;
 }
 .pc:active { transform:scale(.97); }
 .pc.active.daily { border-color:var(--yellow); background:rgba(251,191,36,.08); box-shadow:0 0 20px rgba(251,191,36,.15); }
@@ -152,54 +129,46 @@ body {
 .temp-big.hot { color:var(--red); }
 .temp-big.warm { color:var(--yellow); }
 .temp-big.cool { color:var(--green); }
-.temp-info { flex:1; }
 .temp-bar { height:3px; background:rgba(255,255,255,.06); border-radius:3px; overflow:hidden; }
-.temp-bar-fill { height:100%; background:linear-gradient(to right, var(--green), var(--yellow), var(--red)); transition:width .5s; }
+.temp-bar-fill { height:100%; background:linear-gradient(to right,var(--green),var(--yellow),var(--red)); transition:width .5s; }
 
 /* Console */
-.console-wrap {
-  display:flex; flex-direction:column; height:calc(100% - 20px);
-  font-family:'JetBrains Mono','SF Mono','Courier New',monospace; font-size:12px; line-height:1.6;
+.console-card { display:flex; flex-direction:column; height:calc(100vh - 150px); }
+.console-out {
+  flex:1; overflow-y:auto; background:rgba(0,0,0,.4); border-radius:12px;
+  padding:10px; margin-bottom:8px; border:1px solid var(--border);
+  font-family:'Courier New',monospace; font-size:12px; line-height:1.6; white-space:pre-wrap;
 }
-.console-output {
-  flex:1; overflow-y:auto; background:rgba(0,0,0,.5); border-radius:12px;
-  padding:12px; margin-bottom:10px; border:1px solid var(--border);
-  white-space:pre-wrap; word-break:break-all;
-}
-.console-output::-webkit-scrollbar { width:3px; }
-.console-output::-webkit-scrollbar-thumb { background:var(--accent); border-radius:3px; }
-.console-line { padding:1px 0; }
-.console-line.info { color:var(--muted); }
-.console-line.cmd { color:var(--accent2); font-weight:700; }
-.console-line.out { color:var(--text); }
-.console-line.err { color:var(--red); }
-.console-line.success { color:var(--green); }
-.console-line.warn { color:var(--yellow); }
-.console-input-row {
+.console-out::-webkit-scrollbar { width:3px; }
+.console-out::-webkit-scrollbar-thumb { background:var(--accent); border-radius:3px; }
+.console-ln { padding:1px 0; }
+.console-ln.cmd { color:var(--accent2); font-weight:700; }
+.console-ln.out { color:var(--text); }
+.console-ln.err { color:var(--red); }
+.console-ln.ok { color:var(--green); }
+.console-ln.info { color:var(--muted); }
+.console-ln.warn { color:var(--yellow); }
+.console-in {
   display:flex; gap:8px; align-items:center;
-  background:rgba(0,0,0,.5); border:1px solid var(--border);
+  background:rgba(0,0,0,.4); border:1px solid var(--border);
   border-radius:12px; padding:8px 12px;
 }
-.console-prompt { color:var(--accent2); font-weight:700; font-size:13px; }
-.console-input {
+.console-in .prompt { color:var(--accent2); font-weight:700; font-size:14px; }
+.console-in input {
   flex:1; background:none; border:none; color:var(--text);
-  font-family:inherit; font-size:12px; outline:none;
+  font-family:'Courier New',monospace; font-size:12px; outline:none;
 }
-.console-run {
+.console-in .run {
   background:var(--accent); border:none; color:#fff; width:32px; height:32px;
-  border-radius:10px; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;
-  transition:all .15s;
+  border-radius:10px; font-size:14px; cursor:pointer;
 }
-.console-run:active { transform:scale(.9); }
-.console-tools { display:flex; gap:8px; margin-bottom:8px; }
-.console-btn {
-  padding:4px 12px; border-radius:8px; border:1px solid var(--border);
-  background:transparent; color:var(--muted); font-size:9px; font-family:monospace;
-  cursor:pointer; transition:all .15s;
+.console-in .run:active { transform:scale(.9); }
+.console-tools { display:flex; gap:6px; margin-bottom:8px; }
+.console-tools button {
+  padding:3px 10px; border-radius:8px; border:1px solid var(--border);
+  background:transparent; color:var(--muted); font-size:9px; cursor:pointer;
 }
-.console-btn:active { transform:scale(.95); }
-.console-btn:hover { border-color:var(--accent2); color:var(--text); }
-.console-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+.console-tools button:active { transform:scale(.95); }
 
 /* Settings */
 .set-row {
@@ -207,15 +176,13 @@ body {
 }
 .set-row + .set-row { border-top:1px solid var(--border); }
 .set-label { font-size:13px; font-weight:500; }
-.set-desc { font-size:9px; color:var(--muted); margin-top:1px; }
+.set-desc { font-size:9px; color:var(--muted); }
 .set-val { font-size:11px; color:var(--accent2); font-family:monospace; }
 .theme-btn {
-  padding:6px 12px; border-radius:10px; border:1px solid var(--border);
-  background:transparent; color:var(--muted); font-size:10px; cursor:pointer;
-  transition:all .15s; margin-left:4px;
+  padding:5px 10px; border-radius:10px; border:1px solid var(--border);
+  background:transparent; color:var(--muted); font-size:10px; cursor:pointer; margin-left:4px;
 }
 .theme-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
-.theme-btn:active { transform:scale(.95); }
 
 /* Toast */
 .toast {
@@ -229,9 +196,7 @@ body {
 @media (max-width:400px) {
   .page { padding:12px 12px 72px; }
   .nav-btn { padding:8px 14px; font-size:10px; }
-  .nav-icon { font-size:13px; }
-  .stats { gap:6px; }
-  .temp-big { font-size:24px; min-width:50px; }
+  .console-card { height:calc(100vh - 130px); }
 }
 </style>
 </head>
@@ -244,31 +209,30 @@ body {
       <div class="hero-tag">≫ k6a-tune ≪</div>
       <div class="hero-title">k6a-tune</div>
       <div class="hero-sub">OurKernel-sweet-v4.2.4 · SM7150</div>
-      <div class="hero-badge daily" id="hero-badge">⚙️ DAILY</div>
+      <div class="hero-badge daily" id="badge">⚙️ DAILY</div>
     </div>
-
+    <div class="offline" id="offline">⚠ Controller inactive — no data</div>
     <div class="card">
       <div class="card-title">Profile</div>
       <div class="profiles">
         <div class="pc pc-daily active daily" id="pc-daily" onclick="setProfile('daily')">
           <div class="pc-icon">⚙️</div>
           <div class="pc-name">Daily</div>
-          <div class="pc-sub">EAS on · stromsparend</div>
-          <div class="pc-live"><span id="pc-daily-mhz">—</span> <span id="pc-daily-temp">—</span></div>
+          <div class="pc-sub">EAS · sparsam</div>
+          <div class="pc-live"><span id="pc-mhz">—</span> <span id="pc-temp">—</span></div>
         </div>
         <div class="pc pc-gaming" id="pc-gaming" onclick="setProfile('gaming')">
           <div class="pc-icon">🔥</div>
           <div class="pc-name">Gaming</div>
-          <div class="pc-sub">EAS off · Performance</div>
-          <div class="pc-live"><span id="pc-gaming-mhz">—</span> <span id="pc-gaming-temp">—</span></div>
+          <div class="pc-sub">Performance</div>
+          <div class="pc-live"><span id="pc-mhz2">—</span> <span id="pc-temp2">—</span></div>
         </div>
       </div>
     </div>
-
     <div class="card">
       <div class="card-title">Temperatur</div>
       <div class="temp-row">
-        <div class="temp-big cool" id="temp-val">—</div>
+        <div class="temp-big cool" id="temp">—</div>
         <div class="temp-info">
           <div class="temp-bar"><div class="temp-bar-fill" id="temp-bar" style="width:0%"></div></div>
           <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--muted);margin-top:2px;">
@@ -277,12 +241,11 @@ body {
         </div>
       </div>
     </div>
-
     <div class="card">
       <div class="card-title">System</div>
       <div class="stats">
-        <div class="stat"><span class="stat-label">CPU Silver</span><span class="stat-value gold" id="sys-silver">—</span></div>
-        <div class="stat"><span class="stat-label">CPU Gold</span><span class="stat-value red" id="sys-gold">—</span></div>
+        <div class="stat"><span class="stat-label">CPU Silver</span><span class="stat-value gold" id="sys-s">—</span></div>
+        <div class="stat"><span class="stat-label">CPU Gold</span><span class="stat-value red" id="sys-g">—</span></div>
         <div class="stat"><span class="stat-label">GPU</span><span class="stat-value accent" id="sys-gpu">—</span></div>
         <div class="stat"><span class="stat-label">Akk</span><span class="stat-value grn" id="sys-bat">—</span></div>
       </div>
@@ -292,31 +255,27 @@ body {
         <div class="stat-bar"><div class="stat-bar-fill low" id="ram-bar" style="width:0%"></div></div>
       </div>
       <div style="display:flex;gap:12px;margin-top:8px;font-family:monospace;font-size:8px;color:var(--muted);">
-        <span>🔄 <span id="sys-kernel">—</span></span>
-        <span>⏱ <span id="sys-uptime">—</span></span>
+        <span>🔄 <span id="sys-k">—</span></span>
+        <span>⏱ <span id="sys-up">—</span></span>
       </div>
     </div>
   </div>
 
   <!-- CONSOLE -->
   <div class="page" id="page-console">
-    <div class="card" style="flex:1;display:flex;flex-direction:column;margin-bottom:0;padding:12px;">
+    <div class="card console-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <div class="card-title" style="margin-bottom:0;">Console</div>
-        <div style="display:flex;gap:4px;">
-          <button class="console-btn" onclick="clearConsole()">Clear</button>
-          <button class="console-btn" onclick="copyConsole()">Copy</button>
+        <div class="console-tools">
+          <button onclick="conClear()">Clear</button>
+          <button onclick="conCopy()">Copy</button>
         </div>
       </div>
-      <div class="console-wrap">
-        <div class="console-output" id="console-out">
-          <div class="console-line info">k6a-tune console ready [root]</div>
-        </div>
-        <div class="console-input-row">
-          <span class="console-prompt">$</span>
-          <input class="console-input" id="console-input" type="text" placeholder="command..." spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')runCmd()">
-          <button class="console-run" onclick="runCmd()">▶</button>
-        </div>
+      <div class="console-out" id="con-out"><div class="console-ln info">k6a-tune console ready</div></div>
+      <div class="console-in">
+        <span class="prompt">$</span>
+        <input id="con-input" type="text" placeholder="command..." spellcheck="false" onkeydown="if(event.key==='Enter')conRun()">
+        <button class="run" onclick="conRun()">▶</button>
       </div>
     </div>
   </div>
@@ -328,228 +287,146 @@ body {
       <div class="set-row">
         <div><div class="set-label">Theme</div><div class="set-desc">Dark / Light / AMOLED</div></div>
         <div>
-          <button class="theme-btn active" data-theme-val="dark" onclick="setTheme('dark')">Dark</button>
-          <button class="theme-btn" data-theme-val="light" onclick="setTheme('light')">Light</button>
-          <button class="theme-btn" data-theme-val="amoled" onclick="setTheme('amoled')">AMOLED</button>
+          <button class="theme-btn active" data-v="dark" onclick="setTheme('dark')">Dark</button>
+          <button class="theme-btn" data-v="light" onclick="setTheme('light')">Light</button>
+          <button class="theme-btn" data-v="amoled" onclick="setTheme('amoled')">AMOLED</button>
         </div>
       </div>
     </div>
-
     <div class="card">
       <div class="card-title">Info</div>
       <div class="set-row"><div class="set-label">Version</div><span class="set-val">v1.0</span></div>
       <div class="set-row"><div class="set-label">Autor</div><span class="set-val">vandalsquad187</span></div>
-      <div class="set-row"><div class="set-label">Kernel</div><span class="set-val" id="info-kernel">—</span></div>
-      <div class="set-row"><div class="set-label">Status</div><span class="set-val" id="info-status">—</span></div>
+      <div class="set-row"><div class="set-label">Kernel</div><span class="set-val" id="i-k">—</span></div>
+      <div class="set-row"><div class="set-label">Status</div><span class="set-val" id="i-st">—</span></div>
     </div>
   </div>
 </div>
 
 <nav class="nav">
-  <button class="nav-btn active" data-page="home" onclick="switchPage('home')">
-    <span class="nav-icon">🏠</span> Home
-  </button>
-  <button class="nav-btn" data-page="console" onclick="switchPage('console')">
-    <span class="nav-icon">>_</span> Console
-  </button>
-  <button class="nav-btn" data-page="settings" onclick="switchPage('settings')">
-    <span class="nav-icon">⚡</span> Settings
-  </button>
+  <button class="nav-btn active" data-p="home" onclick="go('home')"><span class="nav-icon">🏠</span> Home</button>
+  <button class="nav-btn" data-p="console" onclick="go('console')"><span class="nav-icon">>_</span> Console</button>
+  <button class="nav-btn" data-p="settings" onclick="go('settings')"><span class="nav-icon">⚡</span> Settings</button>
 </nav>
-
 <div class="toast" id="toast"></div>
 
 <script>
-var MOD = '/data/adb/modules/k6a_tune';
-var MANUAL = MOD + '/config/manual_profile';
-var DATA = MOD + '/webroot/data.txt';
-var _poll;
-var _consoleLines = [];
-var _consoleMax = 500;
+var MOD='/data/adb/modules/k6a_tune';
+var MP=MOD+'/config/manual_profile';
+var _lines=[],_max=300,_miss=0;
 
-function toast(msg) {
-  var t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('on');
-  setTimeout(function(){ t.classList.remove('on'); }, 2000);
-}
+function t(m){var e=document.getElementById('toast');e.textContent=m;e.classList.add('on');setTimeout(function(){e.classList.remove('on')},2000);}
+function ex(c){try{ksu.exec(c)}catch(e){}}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
-function run(cmd) {
-  try { ksu.exec(cmd); } catch(e) {}
-}
-
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function switchPage(id) {
-  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); p.classList.add('hidden'); });
+function go(id){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
   document.getElementById('page-'+id).classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(function(b){
-    var ok = b.getAttribute('data-page')===id;
-    b.classList.toggle('active', ok);
-  });
-  if (id==='console') setTimeout(function(){
-    document.getElementById('console-input').focus();
-  },300);
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-p')===id)});
+  if(id==='console') setTimeout(function(){document.getElementById('con-input').focus()},300);
 }
-
-function setProfile(p) {
-  run("printf '"+p+"' > '"+MANUAL+"'");
-  document.querySelectorAll('.pc').forEach(function(el){ el.classList.remove('active'); });
+function setProfile(p){
+  ex("printf '"+p+"' > '"+MP+"'");
+  document.querySelectorAll('.pc').forEach(function(e){e.classList.remove('active')});
   document.getElementById('pc-'+p).classList.add('active');
-  var badge = document.getElementById('hero-badge');
-  badge.className = 'hero-badge '+p;
-  badge.textContent = p==='gaming' ? '🔥 GAMING' : '⚙️ DAILY';
-  toast('Profile: '+p.toUpperCase());
+  var b=document.getElementById('badge');b.className='hero-badge '+p;b.textContent=p==='gaming'?'🔥 GAMING':'⚙️ DAILY';
+  t('Profile: '+p.toUpperCase());
+}
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  document.querySelectorAll('.theme-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-v')===t)});
+  try{localStorage.setItem('theme',t)}catch(e){}
 }
 
-function setTheme(t) {
-  document.documentElement.setAttribute('data-theme', t);
-  document.querySelectorAll('.theme-btn').forEach(function(b){
-    b.classList.toggle('active', b.getAttribute('data-theme-val')===t);
-  });
-  try { localStorage.setItem('k6a-theme', t); } catch(e) {}
-}
-
-function parseData(txt) {
-  var d = {};
-  (txt||'').split('\n').forEach(function(l){
-    var i=l.indexOf('='); if(i>0) d[l.slice(0,i).trim()]=l.slice(i+1);
-  });
+// Data
+function parse(txt){
+  var d={};(txt||'').split('\n').forEach(function(l){var i=l.indexOf('=');if(i>0)d[l.slice(0,i).trim()]=l.slice(i+1)});
   return d;
 }
-
-function loadData(cb) {
-  fetch('data.txt?_='+Date.now())
-    .then(function(r){ return r.ok ? r.text() : ''; })
-    .then(function(txt){ cb(parseData(txt)); })
-    .catch(function(){ cb({}); });
+function load(cb){
+  fetch('data.txt?_='+Date.now()).then(function(r){return r.ok?r.text():''}).then(function(t){cb(parse(t))}).catch(function(){cb({})});
 }
-
-function applyData(d) {
-  var p = (d.profile||'daily').trim();
-  document.querySelectorAll('.pc').forEach(function(el){ el.classList.remove('active'); });
-  if (document.getElementById('pc-'+p)) document.getElementById('pc-'+p).classList.add('active');
-  var badge = document.getElementById('hero-badge');
-  if (badge) { badge.className = 'hero-badge '+p; badge.textContent = p==='gaming' ? '🔥 GAMING' : '⚙️ DAILY'; }
-
-  if (d.cpu_sil_mhz) {
-    var sm = parseInt(d.cpu_sil_mhz)||0;
-    var silEl = document.getElementById('sys-silver');
-    if (silEl) { silEl.textContent = sm>0 ? sm+' MHz' : '—'; silEl.style.color = sm>=1700 ? 'var(--yellow)' : 'var(--gold)'; }
+function apply(d){
+  var p=d.profile||'daily';
+  document.querySelectorAll('.pc').forEach(function(e){e.classList.remove('active')});
+  var pe=document.getElementById('pc-'+p);if(pe)pe.classList.add('active');
+  var b=document.getElementById('badge');if(b){b.className='hero-badge '+p;b.textContent=p==='gaming'?'🔥 GAMING':'⚙️ DAILY';}
+  var off=document.getElementById('offline');
+  if(d.pid||d.state){
+    off.classList.remove('show');_miss=0;
+  }else{
+    _miss++;if(_miss>3)off.classList.add('show');
   }
-  if (d.cpu_gold_mhz) {
-    var gm = parseInt(d.cpu_gold_mhz)||0;
-    var goldEl = document.getElementById('sys-gold');
-    if (goldEl) { goldEl.textContent = gm>0 ? gm+' MHz' : '—'; goldEl.style.color = gm>=2000 ? 'var(--yellow)' : 'var(--red)'; }
+  if(d.cpu_sil_mhz!==undefined){
+    var v=parseInt(d.cpu_sil_mhz)||0,e=document.getElementById('sys-s');
+    if(e){e.textContent=v>0?v+' MHz':'—';e.style.color=v>=1700?'var(--yellow)':'var(--gold)';}
   }
-  if (d.gpu_mhz) {
-    var gpm = parseInt(d.gpu_mhz)||0;
-    var gpuEl = document.getElementById('sys-gpu');
-    if (gpuEl) { gpuEl.textContent = gpm>0 ? gpm+' MHz' : 'idle'; }
+  if(d.cpu_gold_mhz!==undefined){
+    var v=parseInt(d.cpu_gold_mhz)||0,e=document.getElementById('sys-g');
+    if(e){e.textContent=v>0?v+' MHz':'—';e.style.color=v>=2000?'var(--yellow)':'var(--red)';}
   }
-  if (d.bat) {
-    var batEl = document.getElementById('sys-bat');
-    if (batEl) batEl.textContent = d.bat.trim();
+  if(d.gpu_mhz!==undefined){
+    var v=parseInt(d.gpu_mhz)||0,e=document.getElementById('sys-gpu');
+    if(e)e.textContent=v>0?v+' MHz':'idle';
   }
-  if (d.temp) {
-    var ct = parseInt(d.temp)||0;
-    var tEl = document.getElementById('temp-val');
-    if (tEl) {
-      tEl.textContent = ct>0 ? ct+'°' : '—';
-      tEl.className = 'temp-big '+(ct>=85?'hot':ct>=70?'warm':'cool');
-    }
-    var barEl = document.getElementById('temp-bar');
-    var pctEl = document.getElementById('temp-pct');
-    var pct = Math.min(100, Math.round((ct/100)*100));
-    if (barEl) barEl.style.width = pct+'%';
-    if (pctEl) pctEl.textContent = pct+'%';
+  if(d.bat!==undefined){var e=document.getElementById('sys-bat');if(e)e.textContent=d.bat;}
+  if(d.temp!==undefined){
+    var v=parseInt(d.temp)||0,e=document.getElementById('temp'),pct=Math.min(100,Math.round((v/100)*100));
+    if(e){e.textContent=v>0?v+'°':'—';e.className='temp-big '+(v>=85?'hot':v>=70?'warm':'cool');}
+    var be=document.getElementById('temp-bar');if(be)be.style.width=pct+'%';
+    var pe=document.getElementById('temp-pct');if(pe)pe.textContent=pct+'%';
   }
-  if (d.ram_used && d.ram_total) {
-    var ru = parseInt(d.ram_used)||0;
-    var rt = parseInt(d.ram_total)||1;
-    var rpct = Math.min(100, Math.round((ru/rt)*100));
-    var ramEl = document.getElementById('sys-ram');
-    if (ramEl) ramEl.textContent = (ru/1024).toFixed(1)+' / '+(rt/1024).toFixed(1)+' GB';
-    var rbar = document.getElementById('ram-bar');
-    if (rbar) { rbar.style.width = rpct+'%'; rbar.className = 'stat-bar-fill '+(rpct<50?'low':rpct<80?'mid':'high'); }
+  if(d.ram_used!==undefined&&d.ram_total!==undefined){
+    var u=parseInt(d.ram_used)||0,t=parseInt(d.ram_total)||1,p=Math.min(100,Math.round((u/t)*100));
+    var e=document.getElementById('sys-ram');if(e)e.textContent=(u/1024).toFixed(1)+' / '+(t/1024).toFixed(1)+' GB';
+    var be=document.getElementById('ram-bar');if(be){be.style.width=p+'%';be.className='stat-bar-fill '+(p<50?'low':p<80?'mid':'high');}
   }
-  if (d.kernel) {
-    var kEl = document.getElementById('sys-kernel');
-    if (kEl) { kEl.textContent = d.kernel.trim().substring(0,30); }
-    var infoK = document.getElementById('info-kernel');
-    if (infoK) infoK.textContent = d.kernel.trim().substring(0,30);
+  if(d.kernel){var e=document.getElementById('sys-k');if(e)e.textContent=d.kernel.trim().slice(0,30);var ie=document.getElementById('i-k');if(ie)ie.textContent=d.kernel.trim().slice(0,30);}
+  if(d.uptime){var e=document.getElementById('sys-up');if(e)e.textContent=d.uptime.trim();}
+  if(d.state){var e=document.getElementById('i-st');if(e)e.textContent=d.state.trim();}
+  if(d.cpu_gold_mhz!==undefined){
+    var v=parseInt(d.cpu_gold_mhz)||0,s=v>0?v+' MHz':'—';
+    var e1=document.getElementById('pc-mhz'),e2=document.getElementById('pc-mhz2');
+    if(e1)e1.textContent=s;if(e2)e2.textContent=s;
   }
-  if (d.uptime) { var uEl = document.getElementById('sys-uptime'); if(uEl) uEl.textContent = d.uptime.trim(); }
-  if (d.state) { var sEl = document.getElementById('info-status'); if(sEl) sEl.textContent = d.state.trim(); }
-  if (d.cpu_sil_mhz && d.cpu_gold_mhz) {
-    var ghz = (parseInt(d.cpu_gold_mhz)||0);
-    document.getElementById('pc-daily-mhz').textContent = ghz>0 ? ghz+' MHz' : '—';
-    document.getElementById('pc-gaming-mhz').textContent = ghz>0 ? ghz+' MHz' : '—';
-  }
-  if (d.temp) {
-    document.getElementById('pc-daily-temp').textContent = d.temp+'°C';
-    document.getElementById('pc-gaming-temp').textContent = d.temp+'°C';
+  if(d.temp!==undefined){
+    var s=d.temp+'°C';
+    var e1=document.getElementById('pc-temp'),e2=document.getElementById('pc-temp2');
+    if(e1)e1.textContent=s;if(e2)e2.textContent=s;
   }
 }
 
-// ── Console ────────────────────────────────────────────────────────────────
-function consoleAdd(text, cls) {
-  _consoleLines.push({text:text, cls:cls||'out'});
-  if (_consoleLines.length > _consoleMax) _consoleLines.shift();
-  renderConsole();
+// Console
+function conAdd(text,cls){_lines.push({t:text,c:cls||'out'});if(_lines.length>_max)_lines.shift();conRender();}
+function conRender(){
+  var o=document.getElementById('con-out');
+  o.innerHTML=_lines.map(function(l){return '<div class="console-ln '+esc(l.c)+'">'+esc(l.t)+'</div>'}).join('');
+  o.scrollTop=o.scrollHeight;
 }
-
-function renderConsole() {
-  var out = document.getElementById('console-out');
-  out.innerHTML = _consoleLines.map(function(l){
-    return '<div class="console-line '+esc(l.cls)+'">'+esc(l.text)+'</div>';
-  }).join('');
-  out.scrollTop = out.scrollHeight;
+function conClear(){_lines=[];conAdd('k6a-tune console ready','info');}
+function conCopy(){
+  var t=_lines.map(function(l){return l.t}).join('\n');
+  try{navigator.clipboard.writeText(t);t('Copied!')}catch(e){t('Copy failed')}
 }
-
-function clearConsole() {
-  _consoleLines = [];
-  consoleAdd('k6a-tune console ready [root]', 'info');
-}
-
-function copyConsole() {
-  var txt = _consoleLines.map(function(l){ return l.text; }).join('\n');
-  try { navigator.clipboard.writeText(txt); toast('Copied!'); } catch(e) { toast('Copy failed'); }
-}
-
-function runCmd() {
-  var input = document.getElementById('console-input');
-  var cmd = input.value.trim();
-  if (!cmd) return;
-  input.value = '';
-  consoleAdd('$ '+cmd, 'cmd');
-  try {
-    ksu.exec(cmd, '{}', function(errno, stdout, stderr){
-      if (stdout && stdout.trim()) consoleAdd(stdout.trim(), 'out');
-      if (stderr && stderr.trim()) consoleAdd(stderr.trim(), 'err');
-      if (errno !== 0) consoleAdd('exit code: '+errno, 'err');
+function conRun(){
+  var i=document.getElementById('con-input'),c=i.value.trim();if(!c)return;i.value='';
+  conAdd('$ '+c,'cmd');
+  try{
+    ksu.exec(c,'{}',function(e,o,er){
+      if(o&&o.trim()){var l=o.trim().split('\n');l.forEach(function(x){conAdd(x,'out')})}
+      if(er&&er.trim()){var l=er.trim().split('\n');l.forEach(function(x){conAdd(x,'err')})}
+      if(e!==0)conAdd('exit: '+e,'err');
     });
-  } catch(e) {
-    consoleAdd('Error: '+String(e), 'err');
-  }
+  }catch(e){conAdd('Error: '+String(e),'err');}
 }
 
-// ── Init ───────────────────────────────────────────────────────────────────
+// Init
 (function(){
-  var savedTheme = 'dark';
-  try { savedTheme = localStorage.getItem('k6a-theme') || 'dark'; } catch(e) {}
-  setTheme(savedTheme);
-
-  loadData(function(d){ applyData(d); });
-  _poll = setInterval(function(){
-    loadData(function(d){ applyData(d); });
-  }, 3000);
-  document.addEventListener('visibilitychange', function(){
-    if (document.visibilityState === 'visible') {
-      if (!_poll) _poll = setInterval(function(){ loadData(function(d){ applyData(d); }); }, 3000);
-      loadData(function(d){ applyData(d); });
-    } else {
-      if (_poll) { clearInterval(_poll); _poll = null; }
-    }
+  try{var s=localStorage.getItem('theme')||'dark';setTheme(s)}catch(e){}
+  load(function(d){apply(d)});
+  setInterval(function(){load(function(d){apply(d)})},3000);
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='visible')load(function(d){apply(d)});
   });
 })();
 </script>

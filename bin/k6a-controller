@@ -1,0 +1,247 @@
+#!/system/bin/sh
+# k6a-controller  v1.0 — 2-Mode State Machine (Daily / Gaming)
+# OurKernel-sweet-v4.2.4 | SM7150 sweet/sweet2
+# ─────────────────────────────────────────────────────────────────────────────
+
+MODDIR="${1:-/data/adb/modules/k6a_tune}"
+CONFIG="$MODDIR/config/settings.conf"
+LOG="$MODDIR/config/service.log"
+PROFILE="$MODDIR/config/active_profile"
+DATA="$MODDIR/webroot/data.txt"
+PAUSE_FILE="$MODDIR/run/pause"
+MANUAL_P="$MODDIR/config/manual_profile"
+LOCK="$MODDIR/run/controller.pid"
+LOG_FILE="$LOG"
+
+. "$MODDIR/bin/k6a-lib.sh"
+
+STATE="DAILY"; MANUAL="daily"; TICK=0
+LAST_LOG_TS=0; LOG_INTERVAL=30
+LAST_ENTER_TS=0
+_CFG_CACHE=""
+_LAST_PING=0
+_LAST_TRIM=0
+
+cfg() { grep "^${1}=" "$CONFIG" 2>/dev/null | cut -d= -f2; }
+
+_cfg_load() {
+    CFG_CPU_HOTPLUG=$(cfg cpu_hotplug_enable); CFG_CPU_HOTPLUG=${CFG_CPU_HOTPLUG:-0}
+    DEBUG=$(cfg debug); [ "$DEBUG" != "1" ] && DEBUG=0; CFG_DEBUG=$DEBUG
+    CFG_DEBOUNCE=$(cfg debounce_window); CFG_DEBOUNCE=${CFG_DEBOUNCE:-5}
+    [ "$CFG_DEBOUNCE" -lt 0 ] && CFG_DEBOUNCE=0; [ "$CFG_DEBOUNCE" -gt 60 ] && CFG_DEBOUNCE=60
+    CFG_NET_QOS=$(cfg net_qos_enable); CFG_NET_QOS=${CFG_NET_QOS:-0}
+    CFG_THRESH=$(cfg thermal_cooking_thresh); CFG_THRESH=${CFG_THRESH:-85}
+    [ "$CFG_THRESH" -lt 70 ] && CFG_THRESH=70; [ "$CFG_THRESH" -gt 95 ] && CFG_THRESH=95
+    CFG_RECOVER=$(cfg thermal_recover_thresh); CFG_RECOVER=${CFG_RECOVER:-75}
+    CFG_COOLDOWN=$(cfg thermal_cooldown_thresh); CFG_COOLDOWN=${CFG_COOLDOWN:-72}
+}
+
+_can_enter() {
+    local now diff; now=$(date +%s); diff=$(( now - LAST_ENTER_TS ))
+    [ "$diff" -lt "$CFG_DEBOUNCE" ] && { dbg "Debounce: ${diff}s/${CFG_DEBOUNCE}s"; return 1; }
+    LAST_ENTER_TS=$now; return 0
+}
+
+_enter() {
+    LAST_ENTER_TS=$(( $(date +%s) - CFG_DEBOUNCE - 1 ))
+    "$@"
+}
+
+_ratelog() {
+    local now; now=$(date +%s)
+    [ $(( now - LAST_LOG_TS )) -ge "$LOG_INTERVAL" ] && { LAST_LOG_TS=$now; log "$1"; }
+}
+
+_trim_log() {
+    [ -f "$LOG" ] || return
+    local lines; lines=$(wc -l < "$LOG" 2>/dev/null) || return
+    [ "$lines" -gt 500 ] && tail -n 300 "$LOG" > "${LOG}.tmp" && mv "${LOG}.tmp" "$LOG"
+}
+
+# ── Profile Transitions ─────────────────────────────────────────────────────
+enter_daily() {
+    _can_enter || return 0
+    log "→ DAILY"; _cfg_load
+    cpu_hotplug_online_all
+    cpu_set schedutil 576000 1248000 652800 1651200
+    cpu_hotplug_offline_gold
+    gpu_daily; io_daily; sched_daily; vm_daily; lru_gen_enable
+    wakelock_block; net_daily; props_daily
+    thermal_restore; apply_irq_affinity
+    printf '%s' "daily" > "$PROFILE"; STATE="DAILY"
+    log "DAILY: Silver 576-1248 Gold offline GPU low"
+}
+
+enter_gaming() {
+    _can_enter || return 0
+    log "→ GAMING"; _cfg_load
+    cpu_hotplug_online_all
+    lmh_disable
+    thermal_disable
+    cpu_set schedutil 1497600 1804800 2169600 2208000
+    gpu_gaming; io_gaming; sched_gaming; vm_gaming; lru_gen_enable
+    wakelock_block; net_gaming; props_gaming
+    apply_irq_affinity; tune_gaming
+    printf '%s' "gaming" > "$PROFILE"; STATE="GAMING"
+    log "GAMING: Silver 1497-1804 Gold 2169-2208 GPU max"
+}
+
+# ── Cooldown (sub-state within GAMING) ──────────────────────────────────────
+_do_cooldown() {
+    local temp=$1
+    if [ "$temp" -ge 85 ] 2>/dev/null; then
+        gpu_cooldown 4; w "$P6/scaling_max_freq" 1939200
+        _ratelog "Cooldown L4: ${temp}°C"
+    elif [ "$temp" -ge 80 ] 2>/dev/null; then
+        gpu_cooldown 3; w "$P6/scaling_max_freq" 1939200
+        _ratelog "Cooldown L3: ${temp}°C"
+    elif [ "$temp" -ge 76 ] 2>/dev/null; then
+        gpu_cooldown 2; w "$P6/scaling_max_freq" 2208000
+        _ratelog "Cooldown L2: ${temp}°C"
+    elif [ "$temp" -le 72 ] 2>/dev/null; then
+        gpu_gaming
+        w "$P6/scaling_max_freq" 2208000
+        _ratelog "Cooldown off: ${temp}°C"
+    fi
+}
+
+# ── CPU Freeze Detect ───────────────────────────────────────────────────────
+_cpu_freeze_check() {
+    local smax smin gmax
+    smax=$(r "$P0/scaling_max_freq")
+    smin=$(r "$P0/scaling_min_freq")
+    gmax=$(r "$P6/scaling_max_freq")
+    if [ "$smax" -lt 500000 ] || { [ "$smax" = "$smin" ] && [ "$smax" -lt 1600000 ]; }; then
+        warn "CPU FREEZE (S=${smax}) → recovery"
+        thermal_disable; sleep 0.3; lmh_disable
+        cpu_set schedutil 1497600 1804800 2169600 2208000
+        apply_irq_affinity; log "CPU recovered"
+        return 0
+    fi
+    if [ "$STATE" = "GAMING" ] && [ "$gmax" -lt 1800000 ] 2>/dev/null; then
+        lmh_disable; w "$P6/scaling_max_freq" 2208000
+        dbg "Gold cap removed (was ${gmax})"
+    fi
+    return 0
+}
+
+# ── Data Publishing ─────────────────────────────────────────────────────────
+_write_data() {
+    local temp cpu_s cpu_g gpu_mhz gpu_busy bpc btp btpc
+    temp=$(thermal_cpu_temp)
+    cpu_s=$(( $(r "$P0/scaling_cur_freq") / 1000 ))
+    cpu_g=$(( $(r "$P6/scaling_cur_freq") / 1000 ))
+    gpu_mhz=$(( $(r "$GPU/devfreq/cur_freq") / 1000000 ))
+    gpu_busy=$(r "$GPU/gpu_busy_percentage")
+    bpc=$(r /sys/class/power_supply/battery/capacity)
+    btp=$(r /sys/class/power_supply/battery/temp)
+    btpc="$(( btp / 10 )).$(( btp % 10 ))"
+    local uptime_str ram_total ram_avail ram_used
+    uptime_str=$(uptime 2>/dev/null | sed 's/.*up //' | sed 's/,.*//' | xargs)
+    ram_total=$(grep MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}')
+    ram_avail=$(grep MemAvailable /proc/meminfo 2>/dev/null | awk '{print $2}')
+    ram_used=$(( (ram_total - ram_avail) / 1024 ))
+    ram_total=$(( ram_total / 1024 ))
+    local kv
+    kv=$(uname -r 2>/dev/null || echo "unknown")
+    cat > "${DATA}.tmp" << EOF
+pid=$$
+state=$STATE
+profile=$(r "$PROFILE")
+manual_profile=$MANUAL
+temp=${temp}
+cpu_sil_mhz=${cpu_s}
+cpu_gold_mhz=${cpu_g}
+gpu_mhz=${gpu_mhz}
+gpu_busy=${gpu_busy}
+bat=${bpc}%
+bat_temp=${btpc}
+kernel=${kv}
+uptime=${uptime_str}
+ram_used=${ram_used}
+ram_total=${ram_total}
+tick=${TICK}
+EOF
+    mv "${DATA}.tmp" "$DATA"
+}
+
+_write_ping() {
+    local p
+    p=$(ping -c 1 -W 1 8.8.8.8 2>/dev/null | grep -o "time=[0-9.]*" | cut -d= -f2)
+    printf '%s\n' "${p:-timeout}" > "${DATA}.ping" 2>/dev/null
+}
+
+# ── Startup ─────────────────────────────────────────────────────────────────
+_startup() {
+    if [ -f "$LOCK" ]; then
+        local op; op=$(r "$LOCK")
+        if [ -n "$op" ] && kill -0 "$op" 2>/dev/null; then
+            err "Controller already running (PID $op)"; exit 1
+        fi
+        rm -f "$LOCK"
+    fi
+    echo $$ > "$LOCK"
+    _cfg_load; _cache_thermal_zones
+    detect_kernel_features
+    printf 'pid=%s\nstate=STARTING\nprofile=daily\nmanual_profile=daily\n' "$$" > "$DATA" 2>/dev/null || true
+    log "k6a-tune v1.0 — 2-Mode (daily/gaming) | SM7150 sweet | OurKernel-sweet-v4.2.4"
+    if [ -f "$PAUSE_FILE" ]; then
+        _PAUSED=1; log "⏸ PAUSED"; return
+    fi
+    enter_daily
+}
+
+# ── Main Loop ───────────────────────────────────────────────────────────────
+_startup
+
+while true; do
+    if [ -f "$PAUSE_FILE" ]; then
+        [ "$_PAUSED" = "0" ] && { _PAUSED=1; log "⏸ PAUSED"; }
+        _write_data; sleep 1; TICK=$(( TICK + 1 )); continue
+    fi
+    [ "$_PAUSED" = "1" ] && { _PAUSED=0; log "▶ RESUMED"; _cfg_load; }
+
+    # Manual profile switch
+    _mp=$(r "$MANUAL_P")
+    [ -n "$_mp" ] && MANUAL=$_mp
+    TARGET=""
+    [ "$STATE" != "GAMING" ] && [ "$MANUAL" = "gaming" ] && TARGET="GAMING"
+    [ "$STATE" != "DAILY" ] && [ "$MANUAL" != "gaming" ] && TARGET="DAILY"
+
+    # Thermal management (GAMING only)
+    if [ "$STATE" = "GAMING" ]; then
+        _temp=$(thermal_cpu_temp)
+        [ "$_temp" -ge "$CFG_THRESH" ] 2>/dev/null && _do_cooldown "$_temp"
+        [ "$TICK" -gt 0 ] && [ $(( TICK % 5 )) -eq 0 ] && tune_gaming
+        [ $(( TICK % 10 )) -eq 0 ] && _cpu_freeze_check
+    fi
+
+    # Daily limit enforcement
+    [ "$STATE" = "DAILY" ] && [ $(( TICK % 10 )) -eq 0 ] && {
+        _dm=$(r "$P0/scaling_max_freq")
+        [ "$_dm" -gt 1300000 ] 2>/dev/null && {
+            cpu_set schedutil 576000 1248000 652800 1651200
+            cpu_hotplug_offline_gold
+        }
+    }
+
+    # Apply transition
+    [ -n "$TARGET" ] && [ "$TARGET" != "$STATE" ] && {
+        case "$TARGET" in
+            GAMING) _enter enter_gaming ;;
+            DAILY)  _enter enter_daily ;;
+        esac
+        _write_data
+    }
+
+    # Periodic tasks
+    TICK=$(( TICK + 1 ))
+    [ $(( TICK % 3 )) -eq 0 ] && _write_data
+    [ "$STATE" != "GAMING" ] && [ $(( TICK % 10 )) -eq 0 ] && _write_ping &
+    [ $(( TICK % 10 )) -eq 0 ] && [ "$STATE" = "GAMING" ] && {
+        iw dev wlan0 set power_save off 2>/dev/null || true
+    }
+    [ $(( TICK % 30 )) -eq 0 ] && fstrim /data 2>/dev/null || true
+    [ $(( TICK % 100 )) -eq 0 ] && _trim_log
+    sleep 1
+done

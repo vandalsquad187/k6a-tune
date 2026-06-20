@@ -1,0 +1,11 @@
+id=k6a_tune
+name=k6a-tune
+version=v1.0
+versionCode=1
+author=vandalsquad187
+description=2-Mode Performance Tuner for SM7150 (sweet/sweet2) — Daily + Gaming | OurKernel-sweet-v4.2.4
+minMagisk=25200
+minApi=33
+updateJson=https://raw.githubusercontent.com/vandalsquad187/k6a-tune/main/update.json
+webroot=webroot/index.html
+webuiIcon=icon/icon.png

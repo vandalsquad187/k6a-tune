@@ -211,7 +211,7 @@ body {
       <div class="hero-sub">OurKernel-sweet-v4.2.4 · SM7150</div>
       <div class="hero-badge daily" id="badge">⚙️ DAILY</div>
     </div>
-    <div class="offline" id="offline">⚠ Controller inactive — no data</div>
+    <div class="offline" id="offline">⚠ Controller offline — Preview values</div>
     <div class="card">
       <div class="card-title">Profile</div>
       <div class="profiles">
@@ -313,7 +313,7 @@ body {
 <script>
 var MOD='/data/adb/modules/k6a_tune';
 var MP=MOD+'/config/manual_profile';
-var _lines=[],_max=300,_miss=0;
+var _lines=[],_max=300;
 
 function t(m){var e=document.getElementById('toast');e.textContent=m;e.classList.add('on');setTimeout(function(){e.classList.remove('on')},2000);}
 function ex(c){try{ksu.exec(c)}catch(e){}}
@@ -352,11 +352,8 @@ function apply(d){
   var pe=document.getElementById('pc-'+p);if(pe)pe.classList.add('active');
   var b=document.getElementById('badge');if(b){b.className='hero-badge '+p;b.textContent=p==='gaming'?'🔥 GAMING':'⚙️ DAILY';}
   var off=document.getElementById('offline');
-  if(d.pid||d.state){
-    off.classList.remove('show');_miss=0;
-  }else{
-    _miss++;if(_miss>3)off.classList.add('show');
-  }
+  var online = d.state==="DAILY"||d.state==="GAMING"||d.state==="COOLDOWN";
+  off.classList.toggle('show',!online);
   if(d.cpu_sil_mhz!==undefined){
     var v=parseInt(d.cpu_sil_mhz)||0,e=document.getElementById('sys-s');
     if(e){e.textContent=v>0?v+' MHz':'—';e.style.color=v>=1700?'var(--yellow)':'var(--gold)';}

@@ -185,7 +185,7 @@ _startup() {
     echo $$ > "$LOCK"
     _cfg_load; _cache_thermal_zones
     detect_kernel_features
-    printf 'pid=%s\nstate=STARTING\nprofile=daily\nmanual_profile=daily\n' "$$" > "$DATA" 2>/dev/null || true
+    printf 'pid=%s\nstate=STARTING\ntick=0\nts=%s\n' "$$" "$(date +%s)" > "$DATA" 2>/dev/null || true
     log "k6a-tune v1.0 — 2-Mode (daily/gaming) | SM7150 sweet | OurKernel-sweet-v4.2.4"
     if [ -f "$PAUSE_FILE" ]; then
         _PAUSED=1; log "⏸ PAUSED"; return
@@ -196,10 +196,13 @@ _startup() {
 # ── Main Loop ───────────────────────────────────────────────────────────────
 _startup
 
+log "Main loop start"
 while true; do
+    _write_data
+
     if [ -f "$PAUSE_FILE" ]; then
         [ "$_PAUSED" = "0" ] && { _PAUSED=1; log "⏸ PAUSED"; }
-        _write_data; sleep 1; TICK=$(( TICK + 1 )); continue
+        sleep 1; TICK=$(( TICK + 1 )); continue
     fi
     [ "$_PAUSED" = "1" ] && { _PAUSED=0; log "▶ RESUMED"; _cfg_load; }
 
@@ -238,7 +241,6 @@ while true; do
 
     # Periodic tasks
     TICK=$(( TICK + 1 ))
-    _write_data
     [ "$STATE" != "GAMING" ] && [ $(( TICK % 10 )) -eq 0 ] && _write_ping &
     [ $(( TICK % 10 )) -eq 0 ] && [ "$STATE" = "GAMING" ] && {
         iw dev wlan0 set power_save off 2>/dev/null || true

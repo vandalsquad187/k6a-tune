@@ -352,7 +352,7 @@ function apply(d){
   var pe=document.getElementById('pc-'+p);if(pe)pe.classList.add('active');
   var b=document.getElementById('badge');if(b){b.className='hero-badge '+p;b.textContent=p==='gaming'?'🔥 GAMING':'⚙️ DAILY';}
   var off=document.getElementById('offline');
-  var online = d.state==="DAILY"||d.state==="GAMING"||d.state==="COOLDOWN";
+  var online = d.tick>0 && (d.state==="DAILY"||d.state==="GAMING"||d.state==="COOLDOWN");
   off.classList.toggle('show',!online);
   if(d.cpu_sil_mhz!==undefined){
     var v=parseInt(d.cpu_sil_mhz)||0,e=document.getElementById('sys-s');

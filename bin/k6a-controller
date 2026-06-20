@@ -161,8 +161,10 @@ uptime=${uptime_str}
 ram_used=${ram_used}
 ram_total=${ram_total}
 tick=${TICK}
+ts=$(date +%s)
 EOF
     mv "${DATA}.tmp" "$DATA"
+    dbg "data written (state=$STATE tick=$TICK)"
 }
 
 _write_ping() {
@@ -236,7 +238,7 @@ while true; do
 
     # Periodic tasks
     TICK=$(( TICK + 1 ))
-    [ $(( TICK % 3 )) -eq 0 ] && _write_data
+    _write_data
     [ "$STATE" != "GAMING" ] && [ $(( TICK % 10 )) -eq 0 ] && _write_ping &
     [ $(( TICK % 10 )) -eq 0 ] && [ "$STATE" = "GAMING" ] && {
         iw dev wlan0 set power_save off 2>/dev/null || true

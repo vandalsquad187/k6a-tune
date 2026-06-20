@@ -47,7 +47,8 @@ echo $$ > "$LOCKFILE"
 _cleanup() { rm -f "$LOCKFILE"; }
 trap '_cleanup; exit' EXIT INT TERM
 
-[ -x "$CTRL" ] || { _log "k6a-controller not found"; exit 1; }
+chmod 755 "$CTRL" 2>/dev/null
+[ -f "$CTRL" ] || { _log "k6a-controller not found"; exit 1; }
 
 _log "Starting k6a-controller"
 _uptime_s() { cut -d. -f1 /proc/uptime 2>/dev/null || date +%s; }
@@ -57,7 +58,7 @@ _crash_count=0
 _crash_window=$(_uptime_s)
 
 while true; do
-    nice -n -5 "$CTRL" "$MODDIR"
+    nice -n -5 sh "$CTRL" "$MODDIR"
     _exit=$?
     _now=$(_uptime_s)
 
